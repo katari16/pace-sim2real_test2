@@ -31,6 +31,7 @@ import torch
 
 import isaaclab_tasks  # noqa: F401
 from isaaclab_tasks.utils import parse_env_cfg
+from torch import pi
 
 import pace_sim2real.tasks  # noqa: F401
 
@@ -54,14 +55,37 @@ def main():
     time_frame = torch.linspace(0, 1000, steps=1000, device=env.unwrapped.device)
     trajectory = torch.zeros((1000, 12), device=env.unwrapped.device)
     trajectory[:, :] = 2 * torch.sin(0.2 * time_frame).unsqueeze(-1)
+    # Create a chirp signal for each action dimension
+
+    duration = 20  # seconds
+    sample_rate = 50  # Hz
+    num_steps = duration * sample_rate
+    t = torch.linspace(0, duration, steps=num_steps, device=env.unwrapped.device)
+    f0 = 2  # Hz
+    f1 = 2.0  # Hz
+
+    # Linear chirp: phase = 2*pi*(f0*t + (f1-f0)/(2*duration)*t^2)
+    phase = 2 * pi * (f0 * t + ((f1 - f0) / (2 * duration)) * t ** 2)
+    chirp_signal = torch.sin(phase)
+
+    trajectory = torch.zeros((num_steps, 12), device=env.unwrapped.device)
+    trajectory[:, :] = chirp_signal.unsqueeze(-1)
+    trajectory[:, ]
+    # joint naming order: LF_HAA LH_HAA RF_HAA RH_HAA LF_HFE LH_HFE RF_HFE RH_HFE LF_KFE LH_KFE RF_KFE RH_KFE
     counter = 0
+    joint_idx = 0
     # simulate environment
     while simulation_app.is_running():
         # run everything in inference mode
         with torch.inference_mode():
             # compute zero actions
-            # actions = torch.zeros(env.action_space.shape, device=env.unwrapped.device)
-            actions = trajectory[counter % 1000, :].unsqueeze(0).repeat(env.unwrapped.num_envs, 1)
+            actions = torch.zeros(env.action_space.shape, device=env.unwrapped.device)
+            actions[:, joint_idx] = trajectory[counter % num_steps, joint_idx]
+            # actions = trajectory[counter % num_steps, :].unsqueeze(0).repeat(env.unwrapped.num_envs, 1)
+            if counter % 100 == 0:
+                print(f"[INFO]: Step {counter}")
+                joint_idx = (joint_idx + 1) % 12
+                print(f"[INFO]: Joint {joint_idx}")
             counter += 1
             # apply actions
             env.step(actions)

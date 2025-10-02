@@ -7,6 +7,7 @@ from isaaclab_tasks.manager_based.locomotion.velocity.velocity_env_cfg import Lo
 from isaaclab_assets.robots.anymal import ANYMAL_D_CFG
 from isaaclab.assets import ArticulationCfg
 
+
 @configclass
 class AnymalDPaceEnvCfg(LocomotionVelocityRoughEnvCfg):
     def __post_init__(self):
@@ -17,6 +18,8 @@ class AnymalDPaceEnvCfg(LocomotionVelocityRoughEnvCfg):
 
         # fix in air
         self.scene.robot.spawn.articulation_props.fix_root_link = True
+        self.decimation = 4  # TODO change later to 1
+        self.episode_length_s = 20.0  # TODO: change later to something big
 
         # make a smaller scene for play
         self.scene.num_envs = 50
