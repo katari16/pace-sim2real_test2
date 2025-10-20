@@ -91,7 +91,7 @@ class CMAESOptimizer:
         articulation.write_joint_viscous_friction_coefficient_to_sim(self.sim_params[:, self.damping_idx], joint_ids, env_ids=torch.arange(len(self.sim_params[:, self.damping_idx])))
         articulation.data.default_joint_viscous_friction_coeff[:, joint_ids] = self.sim_params[:, self.damping_idx]
         articulation.write_joint_friction_coefficient_to_sim(self.sim_params[:, self.friction_idx], joint_ids, env_ids=torch.arange(len(self.sim_params[:, self.friction_idx])))
-        articulation.data.default_joint_friction[:, joint_ids] = self.sim_params[:, self.friction_idx]
+        articulation.data.default_joint_friction_coeff[:, joint_ids] = self.sim_params[:, self.friction_idx]
         # TODO add joint bias and delay
 
     def _print_iteration(self):
@@ -105,6 +105,7 @@ class CMAESOptimizer:
         print("Friction: ", self.sim_params[min_index, self.friction_idx].tolist())
         print("Bias: ", self.sim_params[min_index, self.bias_idx].tolist())
         print("Delay: ", self.sim_params[min_index, self.delay_idx].tolist())
+        self._log()
 
     def _params_to_sim_params(self, params):
         sim_params = (params + 1.0) / 2.0  # change range from 0 to 1
@@ -115,23 +116,25 @@ class CMAESOptimizer:
         best_params = torch.tensor(self.optimizer._mean)
         return self._params_to_sim_params(best_params)
 
-    def log(self):
+    def _log(self):
+        min_score, min_score_index = torch.min(self.scores, dim=0)
+        max_score, _ = torch.max(self.scores, dim=0)
         for i in range(len(self.joint_names)):
-            self.writer.add_histogram("4_Bias/distribution_" + self.joint_names[i], dof_pos_bias[:, i], iteration)
-            self.writer.add_histogram("3_Friction/distribution_" + self.joint_names[i], friction[:, i], iteration)
-            self.writer.add_histogram("2_Damping/distribution_" + self.joint_names[i], damping[:, i], iteration)
-            self.writer.add_histogram("1_Armature/distribution_" + self.joint_names[i], armature[:, i], iteration)
+            self.writer.add_histogram("4_Bias/distribution_" + self.joint_names[i], self.sim_params[:, self.bias_idx][:, i], self.iteration_counter)
+            self.writer.add_histogram("3_Friction/distribution_" + self.joint_names[i], self.sim_params[:, self.friction_idx][:, i], self.iteration_counter)
+            self.writer.add_histogram("2_Damping/distribution_" + self.joint_names[i], self.sim_params[:, self.damping_idx][:, i], self.iteration_counter)
+            self.writer.add_histogram("1_Armature/distribution_" + self.joint_names[i], self.sim_params[:, self.armature_idx][:, i], self.iteration_counter)
 
-            self.writer.add_scalar("4_Bias/best_" + self.joint_names[i], dof_pos_bias[min_score_index, i], iteration)
-            self.writer.add_scalar("3_Friction/best_" + self.joint_names[i], friction[min_score_index, i], iteration)
-            self.writer.add_scalar("2_Damping/best_" + self.joint_names[i], damping[min_score_index, i], iteration)
-            self.writer.add_scalar("1_Armature/best_" + self.joint_names[i], armature[min_score_index, i], iteration)
-        self.writer.add_histogram("0_Delay/distribution", delay, iteration)
-        self.writer.add_scalar("0_Delay/best", delay[min_score_index], iteration)
+            self.writer.add_scalar("4_Bias/best_" + self.joint_names[i], self.sim_params[min_score_index, self.bias_idx][i].item(), self.iteration_counter)
+            self.writer.add_scalar("3_Friction/best_" + self.joint_names[i], self.sim_params[min_score_index, self.friction_idx][i].item(), self.iteration_counter)
+            self.writer.add_scalar("2_Damping/best_" + self.joint_names[i], self.sim_params[min_score_index, self.damping_idx][i].item(), self.iteration_counter)
+            self.writer.add_scalar("1_Armature/best_" + self.joint_names[i], self.sim_params[min_score_index, self.armature_idx][i].item(), self.iteration_counter)
+        self.writer.add_histogram("0_Delay/distribution", self.sim_params[:, self.delay_idx], self.iteration_counter)
+        self.writer.add_scalar("0_Delay/best", self.sim_params[min_score_index, self.delay_idx].item(), self.iteration_counter)
 
-        self.writer.add_scalar("0_Episode/score", min_score, iteration)
-        self.writer.add_scalar("0_Episode/max_score", max_score, iteration)
-        self.writer.add_scalar("0_Episode/diff_score", (max_score - min_score) / min_score, iteration)
+        self.writer.add_scalar("0_Episode/score", min_score.item(), self.iteration_counter)
+        self.writer.add_scalar("0_Episode/max_score", max_score.item(), self.iteration_counter)
+        self.writer.add_scalar("0_Episode/diff_score", (max_score - min_score) / min_score, self.iteration_counter)
 
     def save_checkpoint(self, mean, params_buffer, scores_buffer, worst_scores_buffer, iteration):
         torch.save({"mean": mean,

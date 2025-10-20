@@ -13,7 +13,7 @@ from isaaclab.app import AppLauncher
 
 # add argparse arguments
 parser = argparse.ArgumentParser(description="Pace agent for Isaac Lab environments.")
-parser.add_argument("--num_envs", type=int, default=2, help="Number of environments to simulate.")
+parser.add_argument("--num_envs", type=int, default=4096, help="Number of environments to simulate.")
 parser.add_argument("--task", type=str, default="Isaac-Pace-Anymal-D-v0", help="Name of the task.")
 # append AppLauncher cli args
 AppLauncher.add_app_launcher_args(parser)
@@ -31,7 +31,6 @@ import torch
 
 import isaaclab_tasks  # noqa: F401
 from isaaclab_tasks.utils import parse_env_cfg
-from torch import pi
 
 import pace_sim2real.tasks  # noqa: F401
 from pace_sim2real.utils.paths import project_root
@@ -69,12 +68,12 @@ def main():
     # Create optimization stuff
     bounds_params = torch.zeros((49, 2), device=env.unwrapped.device)  # 12 + 12 + 12 + 12 + 1 = 49
     bounds_params[:12, 1] = 0.5  # friction between 0.0 - 0.5
-    bounds_params[12:24, 1] = 6.0  # dof_damping between 0.0 - 6.0
-    # bounds_params[24:, 0] = 1e-4
-    bounds_params[24:36, 1] = 0.5  # armature between 0.0 - 1.0
+    bounds_params[12:24, 1] = 6.0  # dof_damping between 0.0 - 6.0 [Nm s/rad]
+    bounds_params[24:36, 0] = 1e-5
+    bounds_params[24:36, 1] = 1.0  # armature between 1e-5 - 1.0 [kgm2]
     bounds_params[36:48, 0] = -0.1
-    bounds_params[36:48, 1] = 0.1
-    bounds_params[48, 1] = 7.0  # delay between 0.0 - 7.0
+    bounds_params[36:48, 1] = 0.1  # bias between -0.1 - 0.1 [rad]
+    bounds_params[48, 1] = 7.0  # delay between 0.0 - 7.0 [sim steps]
 
     articulation = env.unwrapped.scene["robot"]
     joint_names = IDENTIFIED_JOINTS
@@ -99,6 +98,7 @@ def main():
     time_data = data["time"].to(env.unwrapped.device)
     target_dof_pos = data["dof_target_pos"].to(env.unwrapped.device)
     measured_dof_pos = data["dof_pos"].to(env.unwrapped.device)
+
     num_steps = time_data.shape[0]
     sim_dt = env.unwrapped.sim.cfg.dt
 
@@ -130,7 +130,7 @@ def main():
                 counter = 0
                 opt.evolve()
                 opt.update_simulator(env.unwrapped.scene["robot"], joint_ids)
-
+    # close optimizer
     opt.close()
     # close the simulator
     env.close()
