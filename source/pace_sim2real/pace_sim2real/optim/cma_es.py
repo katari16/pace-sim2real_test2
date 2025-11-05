@@ -59,20 +59,20 @@ class CMAESOptimizer:
         return self.optimizer.ask()
 
     def tell(self, sim_dof_pos, real_dof_pos):
-        self.scores += torch.sum(torch.square(sim_dof_pos - real_dof_pos), dim=1)
+        self.scores += torch.sum(torch.square(sim_dof_pos - real_dof_pos - self.sim_params[:, self.bias_idx]), dim=1)
         self.sim_dof_pos_buffer[:, self.scores_counter, :] = sim_dof_pos
         self.scores_counter += 1
 
     def evolve(self):
         self.scores /= self.scores_counter
         self.scores_buffer[self.iteration_counter, :] = self.scores
-        self.params_buffer[self.iteration_counter, :, :] = self.sim_params
+        self.sim_params_buffer[self.iteration_counter, :, :] = self.sim_params
         solutions = []
         for i in range(self.optimizer.population_size):
             solutions.append((self.params[i].cpu().numpy(), self.scores[i].item()))
         self.optimizer.tell(solutions)
         if self.save_interval > 0 and self.iteration_counter % self.save_interval == 0:
-            self.save_checkpoint(torch.tensor(self._params_to_sim_params(self.optimizer._mean)), self.sim_params_buffer, self.scores_buffer, self.iteration_counter)
+            self.save_checkpoint(self._params_to_sim_params(torch.tensor(self.optimizer._mean, device=self.device)), self.sim_params_buffer, self.scores_buffer, self.iteration_counter)
         self._print_iteration()
 
         self._reset_population()
@@ -92,7 +92,7 @@ class CMAESOptimizer:
         finished = finished or (self.epsilon is not None and diff_score < self.epsilon)
         if finished:
             print("CMA-ES optimization finished.")
-            self.save_checkpoint(torch.tensor(self._params_to_sim_params(self.optimizer._mean)), self.sim_params_buffer, self.scores_buffer, self.iteration_counter - 1)
+            self.save_checkpoint(self._params_to_sim_params(torch.tensor(self.optimizer._mean, device=self.device)), self.sim_params_buffer, self.scores_buffer, self.iteration_counter - 1)
         return finished
 
     def _reset_population(self):
@@ -112,7 +112,8 @@ class CMAESOptimizer:
         # articulation.data.default_joint_dynamic_friction_coeff[:, joint_ids] = self.sim_params[:, self.friction_idx]
         articulation.write_joint_position_to_sim(initial_position, joint_ids)
         articulation.write_joint_velocity_to_sim(torch.zeros_like(initial_position), joint_ids)
-        # TODO add joint bias and delay
+        articulation.actuators["legs"].update_encoder_bias(self.sim_params[:, self.bias_idx], joint_ids)
+        articulation.actuators["legs"].update_time_lags(self.sim_params[:, self.delay_idx].to(torch.int))
 
     def _print_iteration(self):
         min_score = torch.min(self.scores)

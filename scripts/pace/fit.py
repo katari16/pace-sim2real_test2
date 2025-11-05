@@ -71,9 +71,9 @@ def main():
     bounds_params[:12, 1] = 1.0  # armature between 0.0 - 1.0 [kgm2]
     bounds_params[12:24, 1] = 7.0  # dof_damping between 0.0 - 7.0 [Nm s/rad]
     bounds_params[24:36, 1] = 0.5  # friction between 0.0 - 0.5
-    bounds_params[36:48, 0] = 0.0
-    bounds_params[36:48, 1] = 0.0  # bias between -0.1 - 0.1 [rad]
-    bounds_params[48, 1] = 0.0  # delay between 0.0 - 7.0 [sim steps]
+    bounds_params[36:48, 0] = -0.1
+    bounds_params[36:48, 1] = 0.1  # bias between -0.5 - 0.5 [rad]
+    bounds_params[48, 1] = 10.0  # delay between 0.0 - 10.0 [sim steps]
 
     articulation = env.unwrapped.scene["robot"]
     joint_names = IDENTIFIED_JOINTS
@@ -98,7 +98,7 @@ def main():
         population_size=env.unwrapped.num_envs,
         log_dir=log_dir,
         joint_names=joint_names,
-        max_iteration=100,
+        max_iteration=200,
         data=data,
         epsilon=0.01,
         device=env.unwrapped.device,

@@ -82,7 +82,7 @@ def main():
             actions = torch.zeros(env.action_space.shape, device=env.unwrapped.device)
             actions[:, joint_idx] = trajectory[counter % num_steps, joint_idx]
             # actions = trajectory[counter % num_steps, :].unsqueeze(0).repeat(env.unwrapped.num_envs, 1)
-            if counter % 100 == 0:
+            if counter % 400 == 0:
                 print(f"[INFO]: Step {counter}")
                 joint_idx = (joint_idx + 1) % 12
                 print(f"[INFO]: Joint {joint_idx}")

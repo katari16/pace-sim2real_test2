@@ -76,6 +76,7 @@ real_trajectories = config["dof_pos"]  # time x joints
 target_trajectories = config["des_dof_pos"]  # time x joints
 
 print(f"Best parameter set: {params['mean']}")
+encoder_bias = params['mean'][36:48]
 
 if plot_score:
     plt.figure()
@@ -93,7 +94,7 @@ if plot_trajectory:
     for i in range(trajectories.shape[1]):
         plt.figure()
         plt.plot(trajectories[:, i].cpu().numpy(), label="Sim")
-        plt.plot(real_trajectories[:, i].cpu().numpy(), label="Real")
+        plt.plot(real_trajectories[:, i].cpu().numpy() - encoder_bias[i].item(), label="Real")
         plt.plot(target_trajectories[:, i].cpu().numpy(), c="grey", label="Target", linestyle="--")
         plt.title(f"Joint {joint_names[i]}")  # Use joint names from config
         plt.xlabel("Time step")
