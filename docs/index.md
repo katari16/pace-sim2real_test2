@@ -40,3 +40,6 @@ If you use **PACE Sim2Real** in your research, please cite our [paper](https://a
   primaryClass  = {cs.RO},
 }
 ```
+<p align="center">
+  <img src="assets/tytan_pace.gif" alt="Tytan walking with a pace gait">
+</p>

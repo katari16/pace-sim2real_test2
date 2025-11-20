@@ -38,7 +38,6 @@ from pace_sim2real.utils.paths import project_root
 
 
 def main():
-    """Zero actions agent with Isaac Lab environment."""
     # parse configuration
     env_cfg = parse_env_cfg(
         args_cli.task, device=args_cli.device, num_envs=args_cli.num_envs

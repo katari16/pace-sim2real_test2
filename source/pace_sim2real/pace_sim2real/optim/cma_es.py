@@ -169,15 +169,14 @@ class CMAESOptimizer:
 
     def save_checkpoint(self, mean, iteration, finished=False):
         min_index = torch.argmin(self.scores_buffer[iteration, :])
-        torch.save({"best_trajectory": self.sim_dof_pos_buffer[min_index, :, :], },
-                   os.path.join(self.writer.log_dir, "best_trajectory.pt"))
-        torch.save({"mean": mean, },
-                   os.path.join(self.writer.log_dir, "mean_" + f"{iteration:03}" + ".pt"))
-        if finished:
-            if self.save_optimization_process:
-                torch.save({"params_buffer": self.sim_params_buffer,
-                            "scores_buffer": self.scores_buffer, },
-                           os.path.join(self.writer.log_dir, "params_" + f"{iteration:03}" + ".pt"))
+        best_traj = self.sim_dof_pos_buffer[min_index].detach().clone()
+        best_traj = best_traj.cpu()
+        torch.save(best_traj, os.path.join(self.writer.log_dir, "best_trajectory.pt"))
+        torch.save(mean, os.path.join(self.writer.log_dir, "mean_" + f"{iteration:03}" + ".pt"))
+        if finished and self.save_optimization_process:
+            torch.save({"params_buffer": self.sim_params_buffer,
+                        "scores_buffer": self.scores_buffer, },
+                       os.path.join(self.writer.log_dir, "params_" + f"{iteration:03}" + ".pt"))
 
     def close(self):
         self.writer.close()

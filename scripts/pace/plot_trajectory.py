@@ -9,7 +9,7 @@ import argparse
 parser = argparse.ArgumentParser(description="Pace agent for Isaac Lab environments.")
 parser.add_argument("--folder_name", type=str, default=None, help="Name of the folder to use.")
 parser.add_argument("--mean_name", type=str, default=None, help="Name of the parameters file to use.")
-parser.add_argument("--robot_name", type=str, default="anymal_d_sim", help="Name of the robot.")
+parser.add_argument("--robot_name", type=str, default="anymal_d", help="Name of the robot.")
 parser.add_argument("--plot_trajectory", action="store_true", help="Whether to plot the trajectory.")
 parser.add_argument("--plot_score", action="store_true", help="Whether to plot the score over iterations.")
 
@@ -71,12 +71,12 @@ params = torch.load(params_path)
 config = torch.load(log_dir / "config.pt")
 
 joint_order = config["joint_order"]
-trajectories = torch.load(log_dir / "best_trajectory.pt")["best_trajectory"]  # time x joints
+trajectories = torch.load(log_dir / "best_trajectory.pt")  # time x joints
 real_trajectories = config["dof_pos"]  # time x joints
 target_trajectories = config["des_dof_pos"]  # time x joints
 
-print(f"Best parameter set: {params['mean']}")
-encoder_bias = params['mean'][3 * len(joint_order):4 * len(joint_order)]  # extract encoder bias
+print(f"Best parameter set: {params}")
+encoder_bias = params[3 * len(joint_order):4 * len(joint_order)]  # extract encoder bias
 
 if plot_score:
     plt.figure()
