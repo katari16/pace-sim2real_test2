@@ -15,6 +15,9 @@ from isaaclab.app import AppLauncher
 parser = argparse.ArgumentParser(description="Pace agent for Isaac Lab environments.")
 parser.add_argument("--num_envs", type=int, default=1, help="Number of environments to simulate.")
 parser.add_argument("--task", type=str, default="Isaac-Pace-Anymal-D-v0", help="Name of the task.")
+parser.add_argument("--min_frequency", type=float, default=0.1, help="Minimum frequency for the chirp signal in Hz.")
+parser.add_argument("--max_frequency", type=float, default=10.0, help="Maximum frequency for the chirp signal in Hz.")
+parser.add_argument("--duration", type=float, default=20.0, help="Duration of the chirp signal in seconds.")
 # append AppLauncher cli args
 AppLauncher.add_app_launcher_args(parser)
 # parse the arguments
@@ -84,12 +87,12 @@ def main():
 
     # Create a chirp signal for each action dimension
 
-    duration = 20  # seconds
-    sample_rate = 400  # Hz
-    num_steps = duration * sample_rate
+    duration = args_cli.duration  # seconds
+    sample_rate = 1 / env.unwrapped.sim.get_physics_dt()  # Hz
+    num_steps = int(duration * sample_rate)
     t = torch.linspace(0, duration, steps=num_steps, device=env.unwrapped.device)
-    f0 = 0.1  # Hz (0.1)
-    f1 = 10.0  # Hz (10.0)
+    f0 = args_cli.min_frequency  # Hz
+    f1 = args_cli.max_frequency  # Hz
 
     # Linear chirp: phase = 2*pi*(f0*t + (f1-f0)/(2*duration)*t^2)
     phase = 2 * pi * (f0 * t + ((f1 - f0) / (2 * duration)) * t ** 2)
@@ -110,6 +113,7 @@ def main():
         device=env.unwrapped.device
     )
     trajectory[:, joint_ids] = (trajectory[:, joint_ids] + trajectory_bias.unsqueeze(0)) * trajectory_directions.unsqueeze(0) * trajectory_scale.unsqueeze(0)
+
     articulation.write_joint_position_to_sim(trajectory[0, :].unsqueeze(0) + bias[0, joint_ids])
     articulation.write_joint_velocity_to_sim(torch.zeros((1, len(joint_ids)), device=env.unwrapped.device))
 
@@ -151,11 +155,14 @@ def main():
 
     for i in range(len(joint_ids)):
         plt.figure()
-        plt.plot(dof_pos_buffer[:, i].cpu().numpy(), label=f"{joint_order[i]} pos")
-        plt.plot(dof_target_pos_buffer[:, i].cpu().numpy(), label=f"{joint_order[i]} target", linestyle='dashed')
-        plt.grid()
+        plt.plot(t, dof_pos_buffer[:, i].cpu().numpy(), label=f"{joint_order[i]} pos")
+        plt.plot(t, dof_target_pos_buffer[:, i].cpu().numpy(), label=f"{joint_order[i]} target", linestyle='dashed')
         plt.title(f"Joint {joint_order[i]} Trajectory")
+        plt.xlabel("Time [s]")
+        plt.ylabel("Joint position [rad]")
+        plt.grid()
         plt.legend()
+        plt.tight_layout()
         plt.show()
 
 

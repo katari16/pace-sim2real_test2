@@ -29,11 +29,15 @@ Use this documentation to get started, explore examples, and understand how to a
 - **Examples** – minimal scripts demonstrating parameter identification and deployment on the public version of [ANYmal](https://www.anybotics.com/robotics/anymal/).
 - **Guides** – higher-level guides that walk through typical workflows:
     - **Tutorial** – step-by-step setup of your own PACE environment.
+<!--
     - **Simulation** – recommended simulation settings and example environments.
     - **Real-world** – deployment workflows and hardware experiment examples.
 - **Concepts (wip)** – planned for the future; will provide deeper explanations of core ideas behind PACE.
 - **API reference (wip)** – structured overview of the public Python API.
-- **Development (wip)** – contribution guidelines and information for developers.
+- **Development (wip)** – contribution guidelines and information for developers. 
+-->
+
+Additional sections such as Concepts, API Reference, and Development are planned and will be added as the PACE framework evolves.
 
 ## How to cite
 

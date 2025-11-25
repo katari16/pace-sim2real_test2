@@ -27,7 +27,9 @@ class CMAESOptimizer:
         torch.save({"bounds": bounds,
                     "joint_order": joint_order,
                     "dof_pos": data["dof_pos"],
-                    "des_dof_pos": data["des_dof_pos"]}, log_dir + "/config.pt")
+                    "des_dof_pos": data["des_dof_pos"],
+                    "time": data["time"]
+                    }, log_dir + "/config.pt")
 
         self.bounds = bounds
 
@@ -176,7 +178,7 @@ class CMAESOptimizer:
         if finished and self.save_optimization_process:
             torch.save({"params_buffer": self.sim_params_buffer,
                         "scores_buffer": self.scores_buffer, },
-                       os.path.join(self.writer.log_dir, "params_" + f"{iteration:03}" + ".pt"))
+                       os.path.join(self.writer.log_dir, "progress.pt"))
 
     def close(self):
         self.writer.close()

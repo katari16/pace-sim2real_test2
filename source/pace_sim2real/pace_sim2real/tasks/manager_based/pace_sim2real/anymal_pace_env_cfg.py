@@ -54,10 +54,10 @@ class ANYmalDPaceSceneCfg(PaceSim2realSceneCfg):
 class AnymalDPaceEnvCfg(PaceSim2realEnvCfg):
 
     scene: ANYmalDPaceSceneCfg = ANYmalDPaceSceneCfg()
-    sim2real: PaceCfg = PaceCfg(robot_name="anymal_d",
+    sim2real: PaceCfg = PaceCfg(robot_name="anymal_d_sim",
                                 joint_order=REAL_ROBOT_JOINTS,
                                 bounds_params=bounds_params,
-                                data_dir="anymal_d/chirp_data.pt")  # located in pace_sim2real/data/anymal_d_sim/chirp_data.pt
+                                data_dir="anymal_d_sim/chirp_data.pt")  # located in pace_sim2real/data/anymal_d_sim/chirp_data.pt
 
     def __post_init__(self):
         # post init of parent

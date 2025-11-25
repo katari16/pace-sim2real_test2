@@ -55,8 +55,6 @@ def main():
     articulation = env.unwrapped.scene["robot"]
     joint_order = env_cfg.sim2real.joint_order
     sim_joint_ids = torch.tensor([articulation.joint_names.index(name) for name in joint_order], device=env.unwrapped.device)
-    # real_joint_ids = torch.arange(len(sim_joint_ids), device=env.unwrapped.device)
-    # real_joint_ids[12:] += 1  # skip waist_yaw_joint
 
     data_file = project_root() / "data" / env_cfg.sim2real.data_dir
     log_dir = project_root() / "logs" / "pace" / env_cfg.sim2real.robot_name

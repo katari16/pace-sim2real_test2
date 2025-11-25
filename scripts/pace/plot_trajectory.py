@@ -9,7 +9,7 @@ import argparse
 parser = argparse.ArgumentParser(description="Pace agent for Isaac Lab environments.")
 parser.add_argument("--folder_name", type=str, default=None, help="Name of the folder to use.")
 parser.add_argument("--mean_name", type=str, default=None, help="Name of the parameters file to use.")
-parser.add_argument("--robot_name", type=str, default="anymal_d", help="Name of the robot.")
+parser.add_argument("--robot_name", type=str, default="anymal_d_sim", help="Name of the robot.")
 parser.add_argument("--plot_trajectory", action="store_true", help="Whether to plot the trajectory.")
 parser.add_argument("--plot_score", action="store_true", help="Whether to plot the score over iterations.")
 
@@ -67,41 +67,56 @@ if params_path is None:
     raise FileNotFoundError(f"No mean_*.pt files found under {log_dir}")
 print(f"Latest params file: {params_path}")
 
-params = torch.load(params_path)
+mean = torch.load(params_path)
 config = torch.load(log_dir / "config.pt")
 
 joint_order = config["joint_order"]
 trajectories = torch.load(log_dir / "best_trajectory.pt")  # time x joints
 real_trajectories = config["dof_pos"]  # time x joints
 target_trajectories = config["des_dof_pos"]  # time x joints
+time = config["time"]  # time
 
-print(f"Best parameter set: {params}")
-encoder_bias = params[3 * len(joint_order):4 * len(joint_order)]  # extract encoder bias
+print(f"Best parameter set: {mean}")
+print(f"Armature params: {mean[:len(joint_order)]}")
+print(f"Viscous friction params: {mean[len(joint_order):2 * len(joint_order)]}")
+print(f"Static friction params: {mean[2 * len(joint_order):3 * len(joint_order)]}")
+print(f"Encoder bias params: {mean[3 * len(joint_order):4 * len(joint_order)]}")
+print(f"Delay param: {mean[-1].item()}")
+encoder_bias = mean[3 * len(joint_order):4 * len(joint_order)]  # extract encoder bias
+
+if plot_score:
+    try:
+        progress = torch.load(log_dir / "progress.pt")
+        print("Loaded optimization progress.")
+    except FileNotFoundError:
+        progress = None
+        print("No optimization progress file found. Skipping score plot.")
+        plot_score = False
 
 if plot_score:
     plt.figure()
     plt.title("CMA-ES Score over Iterations")
     plt.xlabel("Iteration")
     plt.ylabel("Score")
-    data = torch.min(params["scores_buffer"][:params_num + 1], dim=1).values.cpu().numpy()
+    data = torch.min(progress["scores_buffer"][:params_num + 1], dim=1).values.cpu().numpy()
     plt.semilogy(data)
     plt.xlim(0, params_num)
     # plt.ylim(0, None)
     plt.grid()
     plt.show()
 
-print(encoder_bias)
 if plot_trajectory:
     for i in range(len(joint_order)):
-        plt.figure()
-        plt.plot(trajectories[:, i].cpu().numpy() - encoder_bias[i].item(), label="Sim")
-        plt.plot(real_trajectories[:, i].cpu().numpy(), label="Real")
-        plt.plot(target_trajectories[:, i].cpu().numpy(), c="grey", label="Target", linestyle="--")
+        plt.figure(figsize=(8, 4.5))
+        plt.plot(time, trajectories[:, i].cpu().numpy() - encoder_bias[i].item(), c="tab:orange", label="Sim", linewidth=2)  # in encoder frame
+        plt.plot(time, real_trajectories[:, i].cpu().numpy(), label="Real", c="tab:green", linestyle="--", linewidth=2)
+        plt.plot(time, target_trajectories[:, i].cpu().numpy(), c="grey", label="Target", linestyle="--", alpha=0.5)
         plt.title(f"Joint {joint_order[i]}")  # Use joint names from config
-        plt.xlabel("Time step")
-        plt.ylabel("Position (rad)")
+        plt.xlabel("Time [s]")
+        plt.ylabel("Joint position [rad]")
         plt.legend()
         plt.grid()
+        plt.tight_layout()
         plt.show()
 
 print("Plotting complete.")

@@ -41,17 +41,18 @@ nav:
       - ANYmal: examples/anymal.md
   - Guides:
     - Tutorial: tutorial.md
-    - Simulation: simulation.md
-    - Real-world: real-world.md
-  - Concepts:
-    - Actuator modeling: concepts/actuators.md
-  - API reference:
-      - Overview: api/index.md
+  #   - Simulation: simulation.md
+  #   - Real-world: real-world.md
+  # - Concepts:
+  #   - Actuator modeling: concepts/actuators.md
+  # - API reference:
+  #     - Overview: api/index.md
+  #     - Optimization: api/optim.md
       # - Actuator models: api/actuators.md
       # - Environments: api/envs.md
       # - Training & RL: api/training.md
-  - Development:
-      - Contributing: dev/contributing.md
+  # - Development:
+  #     - Contributing: dev/contributing.md
       # - Changelog: dev/changelog.md
 
 markdown_extensions:
@@ -78,10 +79,9 @@ extra_css:
 
 plugins:
   - search
-  # later you can add:
   # - mkdocstrings:
   #     handlers:
   #       python:
-  #         options:
-  #           docstring_style: google
+  #         paths:
+  #           - source/pace_sim2real
 
