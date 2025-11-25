@@ -1,84 +1,186 @@
-# ⚙️ PACE: Precise Adaptation through Continuous Evolution
+# ⚙️ PACE — Precise Adaptation through Continuous Evolution
 
-PACE is a framework for **sim-to-real transfer of diverse robots**, combining data-driven system identification with evolutionary optimization.  
-It enables accurate actuator modeling and efficient adaptation from simulation to reality.
+PACE is a framework for **sim-to-real transfer of diverse robotic systems**, combining data-driven system identification with evolutionary optimization.
+It enables accurate actuator modeling and robust adaptation from simulation to reality by explicitly learning physically meaningful dynamics parameters.
+
+---
+
+## What is PACE?
+
+PACE bridges the gap between simulation and real hardware by:
+
+* Estimating actuator and joint dynamics directly from measured data
+* Using CMA-ES for robust parameter optimization
+* Applying learned parameters to improve sim-to-real locomotion performance
+* Supporting multiple robot platforms and actuator types
+
+It is designed to integrate seamlessly with **NVIDIA Isaac Lab** and follows its task and environment conventions.
 
 ---
 
 ## Installation
 
-- Install Isaac Lab by following the [installation guide](https://isaac-sim.github.io/IsaacLab/main/source/setup/installation/index.html).
-  We recommend using the conda or uv installation as it simplifies calling Python scripts from the terminal.
+### 1. Install Isaac Lab
 
-- Clone or copy this project/repository separately from the Isaac Lab installation (i.e. outside the `IsaacLab` directory):
+Follow the official Isaac Lab installation guide:
+[https://isaac-sim.github.io/IsaacLab/main/source/setup/installation/index.html](https://isaac-sim.github.io/IsaacLab/main/source/setup/installation/index.html)
 
-- Using a python interpreter that has Isaac Lab installed, install the library in editable mode using:
+We recommend using the **conda** or **uv** installation method, as this simplifies running Python scripts from the terminal and managing dependencies.
 
-    ```bash
-    # use 'PATH_TO_isaaclab.sh|bat -p' instead of 'python' if Isaac Lab is not installed in Python venv or conda
-    python -m pip install -e source/pace_sim2real
+### 2. Clone this repository
 
-## 🐾 Running an Example for **ANYmal D**
+Clone or copy this project separately from the Isaac Lab installation (i.e. outside the `IsaacLab` directory):
 
-1. **Activate the Conda environment** and navigate to the project root:
-   ```bash
-   conda activate <isaaclab_env>
-   cd path/to/project_root
-   ```
+```bash
+git clone git@github.com:<your-org>/pace-sim2real.git
+cd pace-sim2real
+```
 
-1. **Collect simulation data** \
-(Alternatively, upload your own real-world data to project_root/data.)
-   ```bash
-   python scripts/pace/data_collection.py
-   ```
+### 3. Install PACE in editable mode
 
-1. **Fit parameters using PACE**:
-   ```bash
-   python scripts/pace/fit.py
-   ```
+Using a Python interpreter that has Isaac Lab installed:
 
+```bash
+# Use 'PATH_TO_isaaclab.sh|bat -p' instead of 'python'
+# if Isaac Lab is not installed in a Python venv or conda environment
+python -m pip install -e source/pace_sim2real
+```
 
-## Code formatting
+---
 
-We have a pre-commit template to automatically format your code.
-To install pre-commit:
+## 📚 Local Documentation Preview (TODO adjust once open sourcing)
+
+Even if the website is not yet public, you can view the documentation locally.
+
+### Quick preview
+
+```bash
+pip install mkdocs mkdocs-material
+mkdocs serve
+```
+
+Then open in your browser:
+
+```
+http://127.0.0.1:8000
+```
+
+---
+
+## 🐾 Running an Example: ANYmal D
+
+### 1. Activate the Isaac Lab environment
+
+```bash
+conda activate <isaaclab_env>
+cd path/to/pace-sim2real
+```
+
+### 2. Collect excitation data
+
+(Alternatively, place your own real-world data in `data/`)
+
+```bash
+python scripts/pace/data_collection.py
+```
+
+### 3. Run PACE parameter fitting
+
+```bash
+python scripts/pace/fit.py
+```
+
+This will estimate the actuator and joint parameters using CMA-ES and store results in:
+
+```
+logs/pace/<robot_name>/
+```
+
+---
+
+## 🛠 Code Formatting
+
+We provide a pre-commit configuration to automatically format and lint the codebase.
+
+### Install pre-commit
 
 ```bash
 pip install pre-commit
 ```
 
-Then you can run pre-commit with:
+### Enable hooks
+
+```bash
+pre-commit install
+```
+
+### Run manually
 
 ```bash
 pre-commit run --all-files
 ```
 
-## Troubleshooting
+---
 
-### Pylance Missing Indexing of Extensions
+## 🧩 Troubleshooting
 
-In some VsCode versions, the indexing of part of the extensions is missing.
-In this case, add the path to your extension in `.vscode/settings.json` under the key `"python.analysis.extraPaths"`.
+### Pylance: Missing Indexing of Extensions
+
+In some VS Code versions, indexing for Isaac Lab extensions may be incomplete. Add your extension path to `.vscode/settings.json`:
 
 ```json
 {
-    "python.analysis.extraPaths": [
-        "<path-to-ext-repo>/source/pace_sim2real"
-    ]
+  "python.analysis.extraPaths": [
+    "<path-to-ext-repo>/source/pace_sim2real"
+  ]
 }
 ```
 
-### Pylance Crash
+---
 
-If you encounter a crash in `pylance`, it is probable that too many files are indexed and you run out of memory.
-A possible solution is to exclude some of omniverse packages that are not used in your project.
-To do so, modify `.vscode/settings.json` and comment out packages under the key `"python.analysis.extraPaths"`
-Some examples of packages that can likely be excluded are:
+### Pylance: Crash / High Memory Usage
+
+If Pylance crashes due to excessive indexing, exclude unused omniverse packages by commenting them out in:
+
+`.vscode/settings.json` → `python.analysis.extraPaths`
+
+Examples of packages that can often be safely excluded:
 
 ```json
-"<path-to-isaac-sim>/extscache/omni.anim.*"         // Animation packages
-"<path-to-isaac-sim>/extscache/omni.kit.*"          // Kit UI tools
-"<path-to-isaac-sim>/extscache/omni.graph.*"        // Graph UI tools
-"<path-to-isaac-sim>/extscache/omni.services.*"     // Services tools
-...
+"<path-to-isaac-sim>/extscache/omni.anim.*",
+"<path-to-isaac-sim>/extscache/omni.kit.*",
+"<path-to-isaac-sim>/extscache/omni.graph.*",
+"<path-to-isaac-sim>/extscache/omni.services.*"
 ```
+
+---
+
+## Contributing & Feedback
+
+Internal feedback is highly welcome during this phase.
+Please report issues, unclear steps, or suggestions directly via GitHub issues or internal channels.
+
+---
+
+## How to cite
+
+If you use **PACE Sim2Real** in your research, please cite our [paper](https://arxiv.org/pdf/2509.06342):
+
+> F. Bjelonic, F. Tischhauser, and M. Hutter,  
+> _Towards Bridging the Gap: Systematic Sim-to-Real Transfer for Diverse Legged Robots_, arXiv:2509.06342, 2025.
+
+```bibtex
+@article{bjelonic2025towards,
+  title         = {Towards Bridging the Gap: Systematic Sim-to-Real Transfer for Diverse Legged Robots},
+  author        = {Bjelonic, Filip and Tischhauser, Fabian and Hutter, Marco},
+  journal       = {arXiv preprint arXiv:2509.06342},
+  year          = {2025},
+  eprint        = {2509.06342},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO},
+}
+```
+
+---
+
+**PACE** — bringing simulation and reality closer, one parameter at a time.

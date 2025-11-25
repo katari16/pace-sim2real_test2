@@ -1,4 +1,4 @@
-# Tutorial: Creating a Custom PACE Environment and Identifying Dynamics Parameters
+# Tutorial: Creating a Custom PACE Environment and Identifying Parameters
 
 ## Overview
 
